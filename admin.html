@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>大學星攻略｜管理員審核</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Noto Sans TC",
+        "Microsoft JhengHei",
+        sans-serif;
+      background: #f5f7fb;
+      color: #263238;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #253858, #667eea);
+      color: white;
+      padding: 35px 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 30px 20px;
+    }
+
+    .card-box {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.08);
+    }
+
+    .login-box {
+      max-width: 500px;
+      margin: 50px auto;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #253858;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 15px;
+      margin-bottom: 15px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .login-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .logout-btn {
+      background: #64748b;
+      color: white;
+    }
+
+    .approve-btn {
+      background: #16a34a;
+      color: white;
+    }
+
+    .unapprove-btn {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .refresh-btn {
+      background: #253858;
+      color: white;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    .actions-top {
+      display: flex;
+      gap: 10px;
+    }
+
+    .stats {
+      color: #64748b;
+      margin-top: 5px;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .filter-btn.active {
+      background: #253858;
+      color: white;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .person-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .person-photo {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+      background: #e2e8f0;
+    }
+
+    .person-info {
+      padding: 20px;
+    }
+
+    .person-name {
+      font-size: 23px;
+      font-weight: 800;
+      color: #253858;
+    }
+
+    .person-department {
+      margin-top: 5px;
+      color: #667eea;
+      font-weight: 700;
+    }
+
+    .person-introduction {
+      margin-top: 15px;
+      color: #64748b;
+      white-space: pre-wrap;
+      line-height: 1.7;
+    }
+
+    .person-interests {
+      margin-top: 12px;
+      color: #475569;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-weight: 800;
+    }
+
+    .status-pending {
+      color: #d97706;
+    }
+
+    .status-approved {
+      color: #16a34a;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .button-row button {
+      flex: 1;
+    }
+
+    .message {
+      text-align: center;
+      padding: 45px 20px;
+      color: #94a3b8;
+    }
+
+    .error {
+      margin-top: 12px;
+      color: #dc2626;
+      font-weight: 700;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 700px) {
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .card-box {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="header">
+    <h1>🔐 大學星攻略</h1>
+    <div>管理員審核中心</div>
+  </header>
+
+
+  <main class="container">
+
+    <!-- 登入區 -->
+    <section id="loginSection" class="card-box login-box">
+
+      <h2>管理員登入</h2>
+
+      <input
+        type="email"
+        id="email"
+        placeholder="請輸入管理員 Email"
+        autocomplete="username"
+      >
+
+      <input
+        type="password"
+        id="password"
+        placeholder="請輸入管理員密碼"
+        autocomplete="current-password"
+      >
+
+      <button
+        class="login-btn"
+        id="loginBtn">
+        🔐 登入管理員
+      </button>
+
+      <div
+        id="loginMessage"
+        class="error">
+      </div>
+
+    </section>
+
+
+    <!-- 管理區 -->
+    <section
+      id="adminSection"
+      class="card-box hidden">
+
+      <div class="topbar">
+
+        <div>
+          <h2>📋 投稿審核</h2>
+
+          <div
+            id="stats"
+            class="stats">
+            載入中……
+          </div>
+        </div>
+
+        <div class="actions-top">
+
+          <button
+            class="refresh-btn"
+            id="refreshBtn">
+            🔄 重新整理
+          </button>
+
+          <button
+            class="logout-btn"
+            id="logoutBtn">
+            登出
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- 篩選 -->
+      <div class="filter-bar">
+
+        <button
+          class="filter-btn active"
+          data-filter="all">
+          全部
+        </button>
+
+        <button
+          class="filter-btn"
+          data-filter="pending">
+          ⏳ 待審核
+        </button>
+
+        <button
+          class="filter-btn"
+          data-filter="approved">
+          ✅ 已公開
+        </button>
+
+      </div>
+
+
+      <div
+        id="cards"
+        class="cards">
+      </div>
+
+    </section>
+
+  </main>
+
+
+<script>
+
+  /* =========================================
+     SUPABASE
+  ========================================= */
+
+  const SUPABASE_URL =
+    "https://llxucitvxradcjnfkdtd.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_ivX5hpbeoPLRZIygznbaXA_BB_Y6odx";
+
+  const supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+
+  let allParticipants = [];
+  let currentFilter = "all";
+
+
+  /* =========================================
+     登入
+  ========================================= */
+
+  async function login() {
+
+    const email =
+      document
+        .getElementById("email")
+        .value
+        .trim();
+
+    const password =
+      document
+        .getElementById("password")
+        .value;
+
+    const message =
+      document.getElementById("loginMessage");
+
+    message.textContent = "";
+
+    if (!email || !password) {
+
+      message.textContent =
+        "請輸入 Email 和密碼";
+
+      return;
+    }
+
+    const { error } =
+      await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+    if (error) {
+
+      console.error(error);
+
+      message.textContent =
+        "登入失敗：" + error.message;
+
+      return;
+    }
+
+    await checkAdmin();
+  }
+
+
+  /* =========================================
+     確認管理員
+  ========================================= */
+
+  async function checkAdmin() {
+
+    const {
+      data: {
+        user
+      }
+    } =
+      await supabaseClient.auth.getUser();
+
+    if (!user) {
+
+      showLogin();
+
+      return;
+    }
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.rpc("is_admin");
+
+    if (error) {
+
+      console.error(error);
+
+      alert(
+        "無法確認管理員資格：" +
+        error.message
+      );
+
+      await supabaseClient.auth.signOut();
+
+      showLogin();
+
+      return;
+    }
+
+    if (data !== true) {
+
+      alert("你的帳號不是管理員。");
+
+      await supabaseClient.auth.signOut();
+
+      showLogin();
+
+      return;
+    }
+
+
+    document
+      .getElementById("loginSection")
+      .classList.add("hidden");
+
+    document
+      .getElementById("adminSection")
+      .classList.remove("hidden");
+
+    await loadParticipants();
+  }
+
+
+  /* =========================================
+     載入資料
+  ========================================= */
+
+  async function loadParticipants() {
+
+    const cards =
+      document.getElementById("cards");
+
+    cards.innerHTML =
+      `<div class="message">
+        ⏳ 正在載入投稿……
+      </div>`;
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("participants")
+        .select("*")
+        .order("created_at", {
+          ascending: false
+        });
+
+
+    if (error) {
+
+      console.error(error);
+
+      cards.innerHTML =
+        `<div class="message">
+          ❌ 載入失敗<br><br>
+          ${escapeHtml(error.message)}
+        </div>`;
+
+      return;
+    }
+
+
+    allParticipants = data || [];
+
+    updateStats();
+
+    renderParticipants();
+  }
+
+
+  /* =========================================
+     統計
+  ========================================= */
+
+  function updateStats() {
+
+    const total =
+      allParticipants.length;
+
+    const pending =
+      allParticipants.filter(
+        item => !item.is_approved
+      ).length;
+
+    const approved =
+      allParticipants.filter(
+        item => item.is_approved
+      ).length;
+
+    document
+      .getElementById("stats")
+      .textContent =
+      `共 ${total} 筆｜待審核 ${pending} 筆｜已公開 ${approved} 筆`;
+  }
+
+
+  /* =========================================
+     顯示資料
+  ========================================= */
+
+  function renderParticipants() {
+
+    const cards =
+      document.getElementById("cards");
+
+    let data =
+      allParticipants;
+
+
+    if (currentFilter === "pending") {
+
+      data =
+        allParticipants.filter(
+          item => !item.is_approved
+        );
+
+    } else if (
+      currentFilter === "approved"
+    ) {
+
+      data =
+        allParticipants.filter(
+          item => item.is_approved
+        );
+    }
+
+
+    if (data.length === 0) {
+
+      cards.innerHTML =
+        `<div class="message">
+          目前沒有符合條件的投稿。
+        </div>`;
+
+      return;
+    }
+
+
+    cards.innerHTML =
+      data.map(person => {
+
+        const statusHtml =
+          person.is_approved
+
+            ? `
+              <div class="status status-approved">
+                ✅ 已公開
+              </div>
+            `
+
+            : `
+              <div class="status status-pending">
+                ⏳ 待審核
+              </div>
+            `;
+
+
+        const buttonHtml =
+          person.is_approved
+
+            ? `
+              <button
+                class="unapprove-btn"
+                onclick="updateApproval(
+                  '${person.id}',
+                  false
+                )">
+                ↩️ 撤下公開
+              </button>
+            `
+
+            : `
+              <button
+                class="approve-btn"
+                onclick="updateApproval(
+                  '${person.id}',
+                  true
+                )">
+                ✅ 通過並公開
+              </button>
+            `;
+
+
+        return `
+
+          <article class="person-card">
+
+            <img
+              class="person-photo"
+              src="${escapeHtml(person.photo_url)}"
+              alt="${escapeHtml(person.name)}"
+            >
+
+            <div class="person-info">
+
+              <div class="person-name">
+                ${escapeHtml(person.name)}
+              </div>
+
+              ${
+                person.department
+                  ?
+                `
+                <div class="person-department">
+                  ${escapeHtml(
+                    person.department
+                  )}
+                </div>
+                `
+                  :
+                ""
+              }
+
+
+              <div class="person-introduction">
+                ${escapeHtml(
+                  person.introduction
+                )}
+              </div>
+
+
+              ${
+                person.interests
+                  ?
+                `
+                <div class="person-interests">
+                  ❤️ ${escapeHtml(
+                    person.interests
+                  )}
+                </div>
+                `
+                  :
+                ""
+              }
+
+
+              ${statusHtml}
+
+
+              <div class="button-row">
+
+                ${buttonHtml}
+
+              </div>
+
+            </div>
+
+          </article>
+        `;
+
+      }).join("");
+  }
+
+
+  /* =========================================
+     審核
+  ========================================= */
+
+  async function updateApproval(
+    id,
+    approved
+  ) {
+
+    const actionText =
+      approved
+        ? "通過並公開"
+        : "撤下公開";
+
+
+    const ok =
+      confirm(
+        `確定要「${actionText}」這筆投稿嗎？`
+      );
+
+
+    if (!ok) {
+      return;
+    }
+
+
+    const {
+      error
+    } =
+      await supabaseClient
+        .from("participants")
+        .update({
+          is_approved: approved
+        })
+        .eq("id", id);
+
+
+    if (error) {
+
+      console.error(error);
+
+      alert(
+        "操作失敗：" +
+        error.message
+      );
+
+      return;
+    }
+
+
+    await loadParticipants();
+  }
+
+
+  /* =========================================
+     篩選
+  ========================================= */
+
+  document
+    .querySelectorAll(".filter-btn")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          document
+            .querySelectorAll(".filter-btn")
+            .forEach(btn =>
+              btn.classList.remove("active")
+            );
+
+          this.classList.add("active");
+
+          currentFilter =
+            this.dataset.filter;
+
+          renderParticipants();
+        }
+      );
+
+    });
+
+
+  /* =========================================
+     登出
+  ========================================= */
+
+  async function logout() {
+
+    await supabaseClient.auth.signOut();
+
+    showLogin();
+  }
+
+
+  function showLogin() {
+
+    document
+      .getElementById("adminSection")
+      .classList.add("hidden");
+
+    document
+      .getElementById("loginSection")
+      .classList.remove("hidden");
+  }
+
+
+  /* =========================================
+     HTML 安全處理
+  ========================================= */
+
+  function escapeHtml(text) {
+
+    return String(text || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+
+  /* =========================================
+     按鈕事件
+  ========================================= */
+
+  document
+    .getElementById("loginBtn")
+    .addEventListener(
+      "click",
+      login
+    );
+
+
+  document
+    .getElementById("refreshBtn")
+    .addEventListener(
+      "click",
+      loadParticipants
+    );
+
+
+  document
+    .getElementById("logoutBtn")
+    .addEventListener(
+      "click",
+      logout
+    );
+
+
+  /* =========================================
+     Enter 登入
+  ========================================= */
+
+  document
+    .getElementById("password")
+    .addEventListener(
+      "keydown",
+      function(event) {
+
+        if (event.key === "Enter") {
+          login();
+        }
+
+      }
+    );
+
+
+  /* =========================================
+     啟動
+  ========================================= */
+
+  checkAdmin();
+
+</script>
+
+</body>
+</html>
