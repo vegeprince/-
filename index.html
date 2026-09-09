@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>大學星攻略｜我的自我介紹牆</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Noto Sans TC",
+        "Microsoft JhengHei",
+        sans-serif;
+      background: #f5f7fb;
+      color: #263238;
+      line-height: 1.6;
+    }
+
+    /* ===== HERO ===== */
+
+    .hero {
+      min-height: 430px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 60px 20px;
+
+      background:
+        radial-gradient(circle at 20% 20%, #fff7ad 0, transparent 25%),
+        radial-gradient(circle at 80% 30%, #b8e8ff 0, transparent 25%),
+        linear-gradient(135deg, #fff7d6, #e9f7ff);
+    }
+
+    .hero-content {
+      max-width: 760px;
+    }
+
+    .hero-star {
+      font-size: 70px;
+      margin-bottom: 15px;
+    }
+
+    .hero h1 {
+      font-size: clamp(36px, 7vw, 64px);
+      font-weight: 900;
+      color: #253858;
+      margin-bottom: 10px;
+    }
+
+    .hero h2 {
+      font-size: clamp(22px, 4vw, 34px);
+      color: #5d6d7e;
+      margin-bottom: 20px;
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: #64748b;
+      margin-bottom: 30px;
+    }
+
+    .main-button {
+      border: none;
+      background: #253858;
+      color: white;
+      padding: 15px 34px;
+      border-radius: 999px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 8px 20px rgba(37, 56, 88, 0.2);
+    }
+
+    .main-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px rgba(37, 56, 88, 0.25);
+    }
+
+    /* ===== FORM ===== */
+
+    .section {
+      max-width: 1100px;
+      margin: auto;
+      padding: 60px 20px;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .section-title h2 {
+      font-size: 34px;
+      color: #253858;
+      margin-bottom: 8px;
+    }
+
+    .section-title p {
+      color: #718096;
+    }
+
+    .form-card {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 35px;
+      border-radius: 25px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+
+    .form-group {
+      margin-bottom: 22px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #334155;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 13px 15px;
+      font-size: 16px;
+      outline: none;
+      transition: 0.2s;
+      font-family: inherit;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #7c9cff;
+      box-shadow: 0 0 0 4px rgba(124,156,255,0.12);
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    /* ===== PHOTO UPLOAD ===== */
+
+    .photo-upload {
+      border: 2px dashed #cbd5e1;
+      border-radius: 18px;
+      padding: 25px;
+      text-align: center;
+      background: #f8fafc;
+      cursor: pointer;
+    }
+
+    .photo-upload:hover {
+      border-color: #7c9cff;
+      background: #f1f5ff;
+    }
+
+    .photo-upload-icon {
+      font-size: 45px;
+      margin-bottom: 8px;
+    }
+
+    .photo-preview {
+      display: none;
+      margin-top: 15px;
+    }
+
+    .photo-preview img {
+      width: 160px;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+    }
+
+    #photo {
+      display: none;
+    }
+
+    .submit-button {
+      width: 100%;
+      border: none;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 16px;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .submit-button:hover {
+      opacity: 0.92;
+    }
+
+    .message {
+      margin-top: 15px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    /* ===== GALLERY ===== */
+
+    .gallery-section {
+      background: white;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 25px;
+    }
+
+    .person-card {
+      background: white;
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+      transition: 0.2s;
+    }
+
+    .person-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .person-photo {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      background: #e2e8f0;
+    }
+
+    .person-info {
+      padding: 20px;
+    }
+
+    .person-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: #253858;
+      margin-bottom: 3px;
+    }
+
+    .person-department {
+      color: #667eea;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .person-introduction {
+      color: #64748b;
+      font-size: 15px;
+      white-space: pre-wrap;
+    }
+
+    .empty-message {
+      text-align: center;
+      color: #94a3b8;
+      padding: 50px 20px;
+    }
+
+    /* ===== FOOTER ===== */
+
+    footer {
+      text-align: center;
+      padding: 30px 20px;
+      background: #253858;
+      color: white;
+    }
+
+    /* ===== MOBILE ===== */
+
+    @media (max-width: 800px) {
+      .gallery {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+
+      .person-info {
+        padding: 15px;
+      }
+
+      .person-name {
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 500px) {
+      .hero {
+        min-height: 380px;
+      }
+
+      .hero-star {
+        font-size: 55px;
+      }
+
+      .form-card {
+        padding: 22px;
+      }
+
+      .gallery {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ==================== HERO ==================== -->
+
+  <section class="hero">
+
+    <div class="hero-content">
+
+      <div class="hero-star">🌟</div>
+
+      <h1>大學星攻略</h1>
+
+      <h2>我的自我介紹牆</h2>
+
+      <p>
+        上傳一張照片，介紹自己，<br>
+        讓大家認識你！
+      </p>
+
+      <button
+        class="main-button"
+        onclick="document.getElementById('join').scrollIntoView({behavior:'smooth'})">
+        📸 我要加入
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- ==================== FORM ==================== -->
+
+  <section class="section" id="join">
+
+    <div class="section-title">
+
+      <h2>✨ 建立我的介紹卡</h2>
+
+      <p>
+        填寫以下資料，就可以加入自我介紹牆
+      </p>
+
+    </div>
+
+
+    <div class="form-card">
+
+      <form id="participantForm">
+
+        <!-- PHOTO -->
+
+        <div class="form-group">
+
+          <label>📷 我的照片 *</label>
+
+          <label class="photo-upload" for="photo">
+
+            <div class="photo-upload-icon">
+              📸
+            </div>
+
+            <div>
+              點擊選擇照片
+            </div>
+
+            <small>
+              建議使用清楚的個人照片
+            </small>
+
+          </label>
+
+          <input
+            type="file"
+            id="photo"
+            accept="image/jpeg,image/png,image/webp"
+            required
+          >
+
+          <div
+            class="photo-preview"
+            id="photoPreview">
+          </div>
+
+        </div>
+
+
+        <!-- NAME -->
+
+        <div class="form-group">
+
+          <label for="name">
+            👤 姓名 *
+          </label>
+
+          <input
+            type="text"
+            id="name"
+            placeholder="請輸入姓名"
+            maxlength="30"
+            required
+          >
+
+        </div>
+
+
+        <!-- DEPARTMENT -->
+
+        <div class="form-group">
+
+          <label for="department">
+            🎓 學校／系所
+          </label>
+
+          <input
+            type="text"
+            id="department"
+            placeholder="例如：國立臺灣科技大學・資工系"
+            maxlength="80"
+          >
+
+        </div>
+
+
+        <!-- INTRODUCTION -->
+
+        <div class="form-group">
+
+          <label for="introduction">
+            ✍️ 自我介紹 *
+          </label>
+
+          <textarea
+            id="introduction"
+            placeholder="大家好！我是……&#10;&#10;可以介紹自己的個性、興趣、專長，或想認識什麼樣的朋友。"
+            maxlength="500"
+            required
+          ></textarea>
+
+        </div>
+
+
+        <!-- INTERESTS -->
+
+        <div class="form-group">
+
+          <label for="interests">
+            ❤️ 我的興趣
+          </label>
+
+          <input
+            type="text"
+            id="interests"
+            placeholder="例如：音樂、旅行、攝影、美食、籃球"
+            maxlength="100"
+          >
+
+        </div>
+
+
+        <!-- SUBMIT -->
+
+        <button
+          type="submit"
+          class="submit-button">
+          🚀 完成我的介紹
+        </button>
+
+        <div
+          class="message"
+          id="message">
+        </div>
+
+      </form>
+
+    </div>
+
+  </section>
+
+
+  <!-- ==================== GALLERY ==================== -->
+
+  <section class="section gallery-section">
+
+    <div class="section-title">
+
+      <h2>🌟 大家的自我介紹</h2>
+
+      <p>
+        認識更多一起參加活動的朋友
+      </p>
+
+    </div>
+
+
+    <div
+      class="gallery"
+      id="gallery">
+
+      <div class="empty-message">
+        目前還沒有介紹，成為第一位加入的人吧！🌟
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ==================== FOOTER ==================== -->
+
+  <footer>
+
+    🌟 大學星攻略｜我的自我介紹牆
+
+  </footer>
+
+
+<script>
+
+/* ==================================================
+   SUPABASE 設定
+   ================================================== */
+
+/*
+   ⚠️ 請將下面兩個值換成你自己的 Supabase 資訊
+
+   SUPABASE_URL：
+   你 Supabase 左上方看到的網址
+
+   SUPABASE_KEY：
+   Project Settings → API
+   裡面的 Publishable key
+
+   不要使用 service_role / Secret key
+*/
+
+const SUPABASE_URL =
+  "請貼上你的_SUPABASE_URL";
+
+const SUPABASE_KEY =
+  "請貼上你的_PUBLISHABLE_KEY";
+
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
+/* ==================================================
+   PHOTO PREVIEW
+   ================================================== */
+
+const photoInput =
+  document.getElementById("photo");
+
+const photoPreview =
+  document.getElementById("photoPreview");
+
+
+photoInput.addEventListener("change", function () {
+
+  const file = this.files[0];
+
+  if (!file) return;
+
+  if (file.size > 5 * 1024 * 1024) {
+
+    alert("照片不能超過 5MB");
+
+    this.value = "";
+
+    return;
+  }
+
+
+  const reader =
+    new FileReader();
+
+
+  reader.onload =
+    function (e) {
+
+      photoPreview.style.display =
+        "block";
+
+      photoPreview.innerHTML =
+        `<img src="${e.target.result}" alt="照片預覽">`;
+
+    };
+
+
+  reader.readAsDataURL(file);
+
+});
+
+
+/* ==================================================
+   SUBMIT
+   ================================================== */
+
+const form =
+  document.getElementById("participantForm");
+
+const message =
+  document.getElementById("message");
+
+
+form.addEventListener("submit", async function (e) {
+
+  e.preventDefault();
+
+
+  const file =
+    photoInput.files[0];
+
+  const name =
+    document.getElementById("name").value.trim();
+
+  const department =
+    document.getElementById("department").value.trim();
+
+  const introduction =
+    document.getElementById("introduction").value.trim();
+
+  const interests =
+    document.getElementById("interests").value.trim();
+
+
+  if (!file) {
+
+    alert("請先選擇照片");
+
+    return;
+  }
+
+
+  try {
+
+    message.textContent =
+      "⏳ 正在上傳，請稍候……";
+
+
+    /*
+      建立唯一檔名
+    */
+
+    const fileExt =
+      file.name.split(".").pop();
+
+    const fileName =
+      `${crypto.randomUUID()}.${fileExt}`;
+
+
+    /*
+      上傳照片
+    */
+
+    const { error: uploadError } =
+      await supabaseClient
+        .storage
+        .from("participant-photos")
+        .upload(fileName, file);
+
+
+    if (uploadError) {
+
+      throw uploadError;
+
+    }
+
+
+    /*
+      取得照片公開網址
+    */
+
+    const { data: publicData } =
+      supabaseClient
+        .storage
+        .from("participant-photos")
+        .getPublicUrl(fileName);
+
+
+    const photoUrl =
+      publicData.publicUrl;
+
+
+    /*
+      寫入資料庫
+    */
+
+    const { error: insertError } =
+      await supabaseClient
+        .from("participants")
+        .insert({
+
+          name: name,
+
+          department: department,
+
+          introduction: introduction,
+
+          interests: interests,
+
+          photo_url: photoUrl,
+
+          is_approved: false
+
+        });
+
+
+    if (insertError) {
+
+      throw insertError;
+
+    }
+
+
+    message.textContent =
+      "🎉 上傳成功！請等待管理員審核。";
+
+
+    form.reset();
+
+    photoPreview.style.display =
+      "none";
+
+    photoPreview.innerHTML =
+      "";
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    message.textContent =
+      "❌ 上傳失敗，請稍後再試。";
+
+    alert(
+      "上傳失敗：" +
+      error.message
+    );
+
+  }
+
+});
+
+
+/* ==================================================
+   LOAD GALLERY
+   ================================================== */
+
+async function loadGallery() {
+
+  const gallery =
+    document.getElementById("gallery");
+
+
+  const { data, error } =
+    await supabaseClient
+      .from("participants")
+      .select("*")
+      .eq("is_approved", true)
+      .order("created_at", {
+        ascending: false
+      });
+
+
+  if (error) {
+
+    console.error(error);
+
+    gallery.innerHTML =
+      `<div class="empty-message">
+        暫時無法載入介紹牆。
+      </div>`;
+
+    return;
+
+  }
+
+
+  if (!data || data.length === 0) {
+
+    gallery.innerHTML =
+      `<div class="empty-message">
+        目前還沒有公開的介紹。🌟
+      </div>`;
+
+    return;
+
+  }
+
+
+  gallery.innerHTML =
+    data.map(person => `
+
+      <div class="person-card">
+
+        <img
+          class="person-photo"
+          src="${person.photo_url}"
+          alt="${escapeHtml(person.name)}"
+        >
+
+        <div class="person-info">
+
+          <div class="person-name">
+            ${escapeHtml(person.name)}
+          </div>
+
+          ${
+            person.department
+            ?
+            `<div class="person-department">
+              ${escapeHtml(person.department)}
+            </div>`
+            :
+            ""
+          }
+
+          <div class="person-introduction">
+            ${escapeHtml(person.introduction)}
+          </div>
+
+          ${
+            person.interests
+            ?
+            `<div style="margin-top:10px;">
+              ❤️ ${escapeHtml(person.interests)}
+            </div>`
+            :
+            ""
+          }
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+}
+
+
+/* ==================================================
+   安全處理文字
+   ================================================== */
+
+function escapeHtml(text) {
+
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+/* ==================================================
+   啟動
+   ================================================== */
+
+loadGallery();
+
+</script>
+
+</body>
+</html>
