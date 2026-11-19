@@ -1,33 +1,254 @@
-安設佛堂之殊勝｜獨立投稿頁部署說明
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f2e9">
+  <title>安設佛堂之殊勝｜佛堂分享</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","Microsoft JhengHei",sans-serif;background:#f4f6fb;color:#26364d;line-height:1.65}
+    .hero{padding:58px 20px 52px;text-align:center;background:radial-gradient(circle at 18% 20%,#fff0bd 0,transparent 25%),radial-gradient(circle at 82% 25%,#d8e9d7 0,transparent 28%),linear-gradient(135deg,#fbf6e6,#eef5ef)}
+    .hero-icon{font-size:58px;margin-bottom:12px}
+    h1{font-size:clamp(30px,6vw,48px);font-weight:900;color:#283c5d;line-height:1.25}
+    .hero h2{font-size:clamp(18px,3vw,25px);color:#687991;margin-top:10px}
+    .hero p{color:#718096;margin:16px auto 0;max-width:600px}
+    .wrap{max-width:900px;margin:auto;padding:42px 18px 64px}
+    .intro{text-align:center;margin-bottom:28px}
+    .intro h2{font-size:29px;color:#293f60}
+    .intro p{color:#77859a;margin-top:5px}
+    .card{background:white;border-radius:24px;padding:30px;box-shadow:0 12px 38px rgba(38,54,77,.09);max-width:680px;margin:auto}
+    .group{margin-bottom:21px}
+    label{display:block;font-weight:800;color:#344765;margin-bottom:8px}
+    input,textarea{width:100%;border:1.5px solid #dce4ef;border-radius:13px;padding:14px 15px;font:inherit;color:#26364d;background:#fff;outline:none}
+    input:focus,textarea:focus{border-color:#8299cf;box-shadow:0 0 0 4px rgba(130,153,207,.13)}
+    textarea{min-height:125px;resize:vertical}
+    .upload{display:block;border:2px dashed #c8d5e5;border-radius:17px;padding:27px 18px;text-align:center;background:#f8fafc;cursor:pointer;color:#334765}
+    .upload:hover{background:#f1f5fb;border-color:#8da3ce}
+    .upload .camera{font-size:42px}
+    .upload small{display:block;color:#7b899d;margin-top:5px}
+    #photo{position:absolute;left:-9999px}
+    .preview{display:none;margin-top:13px;text-align:center}
+    .preview img{max-width:100%;max-height:280px;object-fit:contain;border-radius:14px}
+    button{width:100%;border:0;border-radius:14px;padding:15px;background:linear-gradient(135deg,#6279c9,#8060a9);color:#fff;font-size:17px;font-weight:800;cursor:pointer}
+    button:disabled{opacity:.6;cursor:wait}
+    .message{margin-top:14px;text-align:center;font-weight:700;white-space:pre-wrap}
+    .gallery-wrap{max-width:1050px;margin:0 auto;padding:8px 18px 60px}
+    .gallery-title{text-align:center;margin-bottom:24px}
+    .gallery-title h2{font-size:27px;color:#293f60}
+    .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px}
+    .item{background:white;border-radius:18px;overflow:hidden;box-shadow:0 8px 26px rgba(38,54,77,.08)}
+    .item img{width:100%;height:220px;object-fit:cover;background:#eef1f5}
+    .item .info{padding:17px}
+    .item h3{font-size:20px;color:#293f60}
+    .item p{color:#66758c;margin-top:5px;white-space:pre-wrap}
+    .empty{text-align:center;color:#8290a3;padding:28px}
+    footer{text-align:center;padding:25px 16px;background:#293f60;color:#fff}
+    @media(max-width:560px){.hero{padding:42px 16px}.card{padding:21px;border-radius:19px}.wrap{padding-top:32px}}
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-icon">🙏</div>
+    <h1>安設佛堂之殊勝</h1>
+    <h2>分享佛堂・廣結善緣</h2>
+    <p>一張照片，記錄家中佛堂的莊嚴與用心，分享安設佛堂的殊勝因緣。</p>
+  </header>
 
-檔案：
-- fotang.html：獨立佛堂投稿頁。
+  <main>
+    <section class="wrap" id="share">
+      <div class="intro">
+        <h2>✨ 分享我的佛堂</h2>
+        <p>請上傳佛堂照片，並填寫以下資料</p>
+      </div>
 
-部署：
-1. 在 GitHub 原網站專案根目錄新增 fotang.html。
-2. 將本檔案內容完整貼上並 Commit changes。
-3. Vercel 自動部署後，網址為：
-   https://git-main-vegeprince.vercel.app/fotang.html
+      <div class="card">
+        <form id="templeForm">
+          <div class="group">
+            <label for="photo">📷 佛堂照片 *</label>
+            <label class="upload" for="photo">
+              <div class="camera">📸</div>
+              <strong>點擊選擇佛堂照片</strong>
+              <small>JPG、PNG 或 WebP，單張不超過 5MB</small>
+            </label>
+            <input id="photo" type="file" accept="image/jpeg,image/png,image/webp" required>
+            <div class="preview" id="preview"><img id="previewImage" alt="佛堂照片預覽"></div>
+          </div>
 
-Supabase 連線：
-- 本頁預設連接你確認的專案：
-  https://mbojxcgoagsnkzwamwnw.supabase.co
-- 必須將程式碼中的 SUPABASE_KEY 替換為該專案自己的 Publishable key：
-  Supabase Dashboard > Project Settings > API Keys > Publishable key
-- 不可使用 service_role 或 Secret key。
-- 請勿把另一個 Supabase 專案的 key 貼過來。
+          <div class="group">
+            <label for="name">👤 姓名 *</label>
+            <input id="name" type="text" maxlength="30" placeholder="請輸入姓名" required>
+          </div>
 
-資料欄位相容方式：
-- 姓名 -> participants.name
-- 供奉仙佛 -> participants.department
-- 擺設風格 -> participants.introduction
-- 照片 -> participant-photos bucket，網址寫入 participants.photo_url
-- interests -> 固定填入「佛堂分享」
-- is_approved -> false（待管理員審核）
-因此不需要新增資料表欄位，也不會取代原本「崇德心蔬社」主頁。
+          <div class="group">
+            <label for="deity">🙏 供奉仙佛 *</label>
+            <input id="deity" type="text" maxlength="120" placeholder="例如：濟公活佛、觀世音菩薩……" required>
+          </div>
 
-重要：
-1. 你目前資料庫 participants 的 INSERT 政策與 Storage upload 政策已經存在，但實際是否可成功上傳，仍需用無痕視窗測試。
-2. 本頁公開展示區只讀取 is_approved=true 的資料，並把既有欄位 department / introduction 顯示為「供奉仙佛／擺設風格」。
-3. 若管理員審核頁把 department / introduction 固定顯示成學校／自我介紹，佛堂資料在原管理頁可能會以原欄位名稱顯示；投稿仍能存入。若要讓管理頁也顯示佛堂專用名稱，需另行修改 admin.html，不能在此頁自行更動。
-4. 照片 Bucket 是 public，圖片網址可被任何取得網址的人瀏覽。
+          <div class="group">
+            <label for="style">🏡 擺設風格 *</label>
+            <textarea id="style" maxlength="1000" placeholder="請分享佛堂的擺設風格、空間特色或安設佛堂的心得……" required></textarea>
+          </div>
+
+          <button id="submitButton" type="submit">🙏 分享我的佛堂</button>
+          <div class="message" id="message" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+    </section>
+
+    <section class="gallery-wrap">
+      <div class="gallery-title">
+        <h2>🪷 佛堂分享</h2>
+        <p>以下內容僅顯示管理員審核通過的分享</p>
+      </div>
+      <div class="gallery" id="gallery"><div class="empty">正在載入佛堂分享……</div></div>
+    </section>
+  </main>
+
+  <footer>🙏 安設佛堂之殊勝｜分享佛堂・廣結善緣</footer>
+
+<script>
+  // 請填入 mbojxcgoagsnkzwamwnw 專案的 Publishable key。
+  // 不可使用 service_role / Secret key。
+  const SUPABASE_URL = "https://mbojxcgoagsnkzwamwnw.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_ivX5hpbeoPLRZIygznbaXA_BB_Y6odx";
+
+  const form = document.getElementById("templeForm");
+  const photoInput = document.getElementById("photo");
+  const preview = document.getElementById("preview");
+  const previewImage = document.getElementById("previewImage");
+  const message = document.getElementById("message");
+  const submitButton = document.getElementById("submitButton");
+  const gallery = document.getElementById("gallery");
+
+  let client = null;
+  if (window.supabase && SUPABASE_KEY && !SUPABASE_KEY.includes("請貼上")) {
+    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+
+  photoInput.addEventListener("change", () => {
+    const file = photoInput.files[0];
+    if (!file) return;
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      alert("照片格式請使用 JPG、PNG 或 WebP。");
+      photoInput.value = "";
+      preview.style.display = "none";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("照片不能超過 5MB。");
+      photoInput.value = "";
+      preview.style.display = "none";
+      return;
+    }
+    previewImage.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+  });
+
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, ch => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    })[ch]);
+  }
+
+  async function loadApprovedTemples() {
+    if (!client) {
+      gallery.innerHTML = '<div class="empty">網站尚未設定 Supabase Publishable key。</div>';
+      return;
+    }
+    const { data, error } = await client
+      .from("participants")
+      .select("id,name,department,introduction,photo_url")
+      .eq("is_approved", true)
+      .order("created_at", { ascending: false })
+      .limit(60);
+
+    if (error) {
+      console.error(error);
+      gallery.innerHTML = '<div class="empty">佛堂分享暫時無法載入，請稍後再試。</div>';
+      return;
+    }
+    if (!data || data.length === 0) {
+      gallery.innerHTML = '<div class="empty">目前還沒有已核准的佛堂分享，歡迎成為第一位分享者。</div>';
+      return;
+    }
+    gallery.innerHTML = data.map(item => `
+      <article class="item">
+        <img src="${escapeHtml(item.photo_url)}" alt="${escapeHtml(item.name)} 的佛堂照片" loading="lazy">
+        <div class="info">
+          <h3>${escapeHtml(item.name)}</h3>
+          <p><strong>供奉仙佛：</strong>${escapeHtml(item.department)}</p>
+          <p><strong>擺設風格：</strong>${escapeHtml(item.introduction)}</p>
+        </div>
+      </article>
+    `).join("");
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!client) {
+      message.textContent = "尚未設定 Supabase Publishable key，請先完成網站設定。";
+      return;
+    }
+
+    const file = photoInput.files[0];
+    const name = document.getElementById("name").value.trim();
+    const deity = document.getElementById("deity").value.trim();
+    const style = document.getElementById("style").value.trim();
+
+    if (!file || !name || !deity || !style) {
+      message.textContent = "請完整填寫必填欄位並選擇照片。";
+      return;
+    }
+
+    submitButton.disabled = true;
+    message.textContent = "⏳ 正在上傳照片與資料，請稍候……";
+
+    let uploadedPath = null;
+    try {
+      const extension = file.name.split(".").pop().toLowerCase();
+      const safeName = `${crypto.randomUUID()}.${extension}`;
+
+      const { error: uploadError } = await client.storage
+        .from("participant-photos")
+        .upload(safeName, file, { contentType: file.type, upsert: false });
+
+      if (uploadError) throw uploadError;
+      uploadedPath = safeName;
+
+      const { data: publicData } = client.storage
+        .from("participant-photos")
+        .getPublicUrl(safeName);
+
+      // 沿用既有 participants 欄位，避免更動現有資料表與管理員頁：
+      // department 儲存「供奉仙佛」；introduction 儲存「擺設風格」。
+      const { error: insertError } = await client.from("participants").insert({
+        name,
+        department: deity,
+        introduction: style,
+        interests: "佛堂分享",
+        photo_url: publicData.publicUrl,
+        is_approved: false
+      });
+
+      if (insertError) throw insertError;
+
+      message.textContent = "🎉 分享成功！資料已送出，請等待管理員審核。";
+      form.reset();
+      preview.style.display = "none";
+      previewImage.removeAttribute("src");
+    } catch (error) {
+      console.error(error);
+      message.textContent = `❌ 送出失敗：${error.message || "請稍後再試"}`;
+      // 若資料寫入失敗，已上傳照片可能成為未使用檔案；不自動刪除，避免誤刪。
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+
+  loadApprovedTemples();
+</script>
+</body>
+</html>
