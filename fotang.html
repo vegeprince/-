@@ -166,12 +166,13 @@
       return;
     }
 
-    // fotang_submissions 欄位：name、deity、style、photo_url、is_approved、created_at
+    // 依照 Supabase fotang_submissions 實際欄位名稱：
+    // id、姓名、提供、風格、照片連結、已批准、創建於
     const { data, error } = await client
       .from(TABLE_NAME)
-      .select("id,name,deity,style,photo_url")
-      .eq("is_approved", true)
-      .order("created_at", { ascending: false })
+      .select("id,姓名,提供,風格,照片連結")
+      .eq("已批准", true)
+      .order("創建於", { ascending: false })
       .limit(60);
 
     if (error) {
@@ -187,11 +188,11 @@
 
     gallery.innerHTML = data.map(item => `
       <article class="item">
-        <img src="${escapeHtml(item.photo_url)}" alt="${escapeHtml(item.name)} 的佛堂照片" loading="lazy">
+        <img src="${escapeHtml(item["照片連結"])}" alt="${escapeHtml(item["姓名"])} 的佛堂照片" loading="lazy">
         <div class="info">
-          <h3>${escapeHtml(item.name)}</h3>
-          <p><strong>供奉仙佛：</strong>${escapeHtml(item.deity)}</p>
-          <p><strong>擺設風格：</strong>${escapeHtml(item.style)}</p>
+          <h3>${escapeHtml(item["姓名"])}</h3>
+          <p><strong>供奉仙佛：</strong>${escapeHtml(item["提供"])}</p>
+          <p><strong>擺設風格：</strong>${escapeHtml(item["風格"])}</p>
         </div>
       </article>
     `).join("");
@@ -264,11 +265,11 @@
       const { error: insertError } = await client
         .from(TABLE_NAME)
         .insert({
-          name: name,
-          deity: deity,
-          style: style,
-          photo_url: photoUrl,
-          is_approved: false
+          "姓名": name,
+          "提供": deity,
+          "風格": style,
+          "照片連結": photoUrl,
+          "已批准": false
         });
 
       if (insertError) {
