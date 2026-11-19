@@ -1,0 +1,33 @@
+安設佛堂之殊勝｜獨立投稿頁部署說明
+
+檔案：
+- fotang.html：獨立佛堂投稿頁。
+
+部署：
+1. 在 GitHub 原網站專案根目錄新增 fotang.html。
+2. 將本檔案內容完整貼上並 Commit changes。
+3. Vercel 自動部署後，網址為：
+   https://git-main-vegeprince.vercel.app/fotang.html
+
+Supabase 連線：
+- 本頁預設連接你確認的專案：
+  https://mbojxcgoagsnkzwamwnw.supabase.co
+- 必須將程式碼中的 SUPABASE_KEY 替換為該專案自己的 Publishable key：
+  Supabase Dashboard > Project Settings > API Keys > Publishable key
+- 不可使用 service_role 或 Secret key。
+- 請勿把另一個 Supabase 專案的 key 貼過來。
+
+資料欄位相容方式：
+- 姓名 -> participants.name
+- 供奉仙佛 -> participants.department
+- 擺設風格 -> participants.introduction
+- 照片 -> participant-photos bucket，網址寫入 participants.photo_url
+- interests -> 固定填入「佛堂分享」
+- is_approved -> false（待管理員審核）
+因此不需要新增資料表欄位，也不會取代原本「崇德心蔬社」主頁。
+
+重要：
+1. 你目前資料庫 participants 的 INSERT 政策與 Storage upload 政策已經存在，但實際是否可成功上傳，仍需用無痕視窗測試。
+2. 本頁公開展示區只讀取 is_approved=true 的資料，並把既有欄位 department / introduction 顯示為「供奉仙佛／擺設風格」。
+3. 若管理員審核頁把 department / introduction 固定顯示成學校／自我介紹，佛堂資料在原管理頁可能會以原欄位名稱顯示；投稿仍能存入。若要讓管理頁也顯示佛堂專用名稱，需另行修改 admin.html，不能在此頁自行更動。
+4. 照片 Bucket 是 public，圖片網址可被任何取得網址的人瀏覽。
