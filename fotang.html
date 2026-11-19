@@ -170,9 +170,9 @@
     // id、姓名、提供、風格、照片連結、已批准、創建於
     const { data, error } = await client
       .from(TABLE_NAME)
-      .select("id,姓名,提供,風格,照片連結")
-      .eq("已批准", true)
-      .order("創建於", { ascending: false })
+      .select("id,name,offering,style,photo_url")
+      .eq("is_approved", true)
+      .order("created_at", { ascending: false })
       .limit(60);
 
     if (error) {
@@ -188,11 +188,11 @@
 
     gallery.innerHTML = data.map(item => `
       <article class="item">
-        <img src="${escapeHtml(item["照片連結"])}" alt="${escapeHtml(item["姓名"])} 的佛堂照片" loading="lazy">
+        <img src="${escapeHtml(item.photo_url)}" alt="${escapeHtml(item.name)} 的佛堂照片" loading="lazy">
         <div class="info">
-          <h3>${escapeHtml(item["姓名"])}</h3>
-          <p><strong>供奉仙佛：</strong>${escapeHtml(item["提供"])}</p>
-          <p><strong>擺設風格：</strong>${escapeHtml(item["風格"])}</p>
+          <h3>${escapeHtml(item.name)}</h3>
+          <p><strong>供奉仙佛：</strong>${escapeHtml(item.offering)}</p>
+          <p><strong>擺設風格：</strong>${escapeHtml(item.style)}</p>
         </div>
       </article>
     `).join("");
@@ -265,15 +265,15 @@
       const { error: insertError } = await client
         .from(TABLE_NAME)
         .insert({
-          "姓名": name,
-          "提供": deity,
-          "風格": style,
-          "照片連結": photoUrl,
-          "已批准": false
+          name: name,
+          offering: deity,
+          style: style,
+          photo_url: photoUrl,
+          is_approved: false
         });
 
       if (insertError) {
-        throw new Error(`照片已上傳，但資料庫寫入失敗（${TABLE_NAME}）：${insertError.message}`);
+        throw new Error(`照片已上傳，但資料庫寫入失敗（${TABLE_NAME}）：${insertError.message}。請確認欄位名稱為 name、offering、style、photo_url、is_approved、created_at。`);
       }
 
       // 只有照片上傳及資料庫寫入都成功，才顯示成功。
