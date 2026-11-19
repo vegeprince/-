@@ -62,7 +62,6 @@
         <h2>✨ 分享我的佛堂</h2>
         <p>請上傳佛堂照片，並填寫以下資料</p>
       </div>
-
       <div class="card">
         <form id="templeForm">
           <div class="group">
@@ -75,22 +74,18 @@
             <input id="photo" type="file" accept="image/jpeg,image/png,image/webp" required>
             <div class="preview" id="preview"><img id="previewImage" alt="佛堂照片預覽"></div>
           </div>
-
           <div class="group">
             <label for="name">👤 姓名 *</label>
             <input id="name" type="text" maxlength="30" placeholder="請輸入姓名" required>
           </div>
-
           <div class="group">
             <label for="deity">🙏 供奉仙佛 *</label>
             <input id="deity" type="text" maxlength="120" placeholder="例如：濟公活佛、觀世音菩薩……" required>
           </div>
-
           <div class="group">
             <label for="style">🏡 擺設風格 *</label>
             <textarea id="style" maxlength="1000" placeholder="請分享佛堂的擺設風格、空間特色或安設佛堂的心得……" required></textarea>
           </div>
-
           <button id="submitButton" type="submit">🙏 分享我的佛堂</button>
           <div class="message" id="message" role="status" aria-live="polite"></div>
         </form>
@@ -109,10 +104,14 @@
   <footer>🙏 安設佛堂之殊勝｜分享佛堂・廣結善緣</footer>
 
 <script>
-  // 請填入 mbojxcgoagsnkzwamwnw 專案的 Publishable key。
-  // 不可使用 service_role / Secret key。
+  // 使用 Supabase Publishable key；不可放入 service_role / Secret key。
   const SUPABASE_URL = "https://mbojxcgoagsnkzwamwnw.supabase.co";
   const SUPABASE_KEY = "sb_publishable_ivX5hpbeoPLRZIygznbaXA_BB_Y6odx";
+
+  // 必須與 Supabase Storage 中實際建立的 Bucket 名稱完全一致。
+  const STORAGE_BUCKET = "fotang-photos";
+  // 必須與 Supabase Database 中實際建立的資料表名稱完全一致。
+  const TABLE_NAME = "fotang_submissions";
 
   const form = document.getElementById("templeForm");
   const photoInput = document.getElementById("photo");
@@ -122,14 +121,16 @@
   const submitButton = document.getElementById("submitButton");
   const gallery = document.getElementById("gallery");
 
-  let client = null;
-  if (window.supabase && SUPABASE_KEY && !SUPABASE_KEY.includes("請貼上")) {
-    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  }
+  const client = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   photoInput.addEventListener("change", () => {
-    const file = photoInput.files[0];
-    if (!file) return;
+    const file = photoInput.files?.[0];
+    if (!file) {
+      preview.style.display = "none";
+      previewImage.removeAttribute("src");
+      return;
+    }
+
     const allowed = ["image/jpeg", "image/png", "image/webp"];
     if (!allowed.includes(file.type)) {
       alert("照片格式請使用 JPG、PNG 或 WebP。");
@@ -143,7 +144,13 @@
       preview.style.display = "none";
       return;
     }
-    previewImage.src = URL.createObjectURL(file);
+
+    if (previewImage.dataset.objectUrl) {
+      URL.revokeObjectURL(previewImage.dataset.objectUrl);
+    }
+    const objectUrl = URL.createObjectURL(file);
+    previewImage.src = objectUrl;
+    previewImage.dataset.objectUrl = objectUrl;
     preview.style.display = "block";
   });
 
@@ -155,32 +162,36 @@
 
   async function loadApprovedTemples() {
     if (!client) {
-      gallery.innerHTML = '<div class="empty">網站尚未設定 Supabase Publishable key。</div>';
+      gallery.innerHTML = '<div class="empty">Supabase 初始化失敗，請檢查網路或專案設定。</div>';
       return;
     }
+
+    // fotang_submissions 欄位：name、deity、style、photo_url、is_approved、created_at
     const { data, error } = await client
-      .from("participants")
-      .select("id,name,department,introduction,photo_url")
+      .from(TABLE_NAME)
+      .select("id,name,deity,style,photo_url")
       .eq("is_approved", true)
       .order("created_at", { ascending: false })
       .limit(60);
 
     if (error) {
-      console.error(error);
-      gallery.innerHTML = '<div class="empty">佛堂分享暫時無法載入，請稍後再試。</div>';
+      console.error("讀取佛堂分享失敗：", error);
+      gallery.innerHTML = '<div class="empty">佛堂分享暫時無法載入，請確認資料表欄位與讀取權限。</div>';
       return;
     }
+
     if (!data || data.length === 0) {
       gallery.innerHTML = '<div class="empty">目前還沒有已核准的佛堂分享，歡迎成為第一位分享者。</div>';
       return;
     }
+
     gallery.innerHTML = data.map(item => `
       <article class="item">
         <img src="${escapeHtml(item.photo_url)}" alt="${escapeHtml(item.name)} 的佛堂照片" loading="lazy">
         <div class="info">
           <h3>${escapeHtml(item.name)}</h3>
-          <p><strong>供奉仙佛：</strong>${escapeHtml(item.department)}</p>
-          <p><strong>擺設風格：</strong>${escapeHtml(item.introduction)}</p>
+          <p><strong>供奉仙佛：</strong>${escapeHtml(item.deity)}</p>
+          <p><strong>擺設風格：</strong>${escapeHtml(item.style)}</p>
         </div>
       </article>
     `).join("");
@@ -188,12 +199,13 @@
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+
     if (!client) {
-      message.textContent = "尚未設定 Supabase Publishable key，請先完成網站設定。";
+      message.textContent = "❌ Supabase 初始化失敗，請檢查設定。";
       return;
     }
 
-    const file = photoInput.files[0];
+    const file = photoInput.files?.[0];
     const name = document.getElementById("name").value.trim();
     const deity = document.getElementById("deity").value.trim();
     const style = document.getElementById("style").value.trim();
@@ -203,46 +215,81 @@
       return;
     }
 
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+        file.size > 5 * 1024 * 1024) {
+      message.textContent = "照片格式或大小不符合規定，請重新選擇。";
+      return;
+    }
+
     submitButton.disabled = true;
-    message.textContent = "⏳ 正在上傳照片與資料，請稍候……";
+    message.textContent = "⏳ 第 1/2 步：正在上傳照片至佛堂照片空間……";
 
     let uploadedPath = null;
+
     try {
-      const extension = file.name.split(".").pop().toLowerCase();
-      const safeName = `${crypto.randomUUID()}.${extension}`;
+      const extensionByType = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp"
+      };
+      const filePath = `${crypto.randomUUID()}.${extensionByType[file.type]}`;
 
-      const { error: uploadError } = await client.storage
-        .from("participant-photos")
-        .upload(safeName, file, { contentType: file.type, upsert: false });
+      // 第一步：確實上傳至 fotang-photos。
+      const { data: uploadData, error: uploadError } = await client.storage
+        .from(STORAGE_BUCKET)
+        .upload(filePath, file, {
+          contentType: file.type,
+          upsert: false,
+          cacheControl: "3600"
+        });
 
-      if (uploadError) throw uploadError;
-      uploadedPath = safeName;
+      if (uploadError) {
+        throw new Error(`照片上傳失敗（${STORAGE_BUCKET}）：${uploadError.message}`);
+      }
+      uploadedPath = uploadData.path;
 
+      // 第二步：取得剛上傳照片的公開網址。
       const { data: publicData } = client.storage
-        .from("participant-photos")
-        .getPublicUrl(safeName);
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(uploadedPath);
 
-      // 沿用既有 participants 欄位，避免更動現有資料表與管理員頁：
-      // department 儲存「供奉仙佛」；introduction 儲存「擺設風格」。
-      const { error: insertError } = await client.from("participants").insert({
-        name,
-        department: deity,
-        introduction: style,
-        interests: "佛堂分享",
-        photo_url: publicData.publicUrl,
-        is_approved: false
-      });
+      const photoUrl = publicData?.publicUrl;
+      if (!photoUrl) {
+        throw new Error("照片已上傳，但無法取得公開網址。請檢查 Bucket 是否設為 Public。");
+      }
 
-      if (insertError) throw insertError;
+      message.textContent = "⏳ 第 2/2 步：照片已上傳，正在儲存投稿資料……";
 
-      message.textContent = "🎉 分享成功！資料已送出，請等待管理員審核。";
+      // 第三步：寫入 fotang_submissions。
+      const { error: insertError } = await client
+        .from(TABLE_NAME)
+        .insert({
+          name: name,
+          deity: deity,
+          style: style,
+          photo_url: photoUrl,
+          is_approved: false
+        });
+
+      if (insertError) {
+        throw new Error(`照片已上傳，但資料庫寫入失敗（${TABLE_NAME}）：${insertError.message}`);
+      }
+
+      // 只有照片上傳及資料庫寫入都成功，才顯示成功。
+      message.textContent = "🎉 分享成功！照片與資料都已儲存，請等待管理員審核。";
       form.reset();
       preview.style.display = "none";
       previewImage.removeAttribute("src");
+      if (previewImage.dataset.objectUrl) {
+        URL.revokeObjectURL(previewImage.dataset.objectUrl);
+        delete previewImage.dataset.objectUrl;
+      }
     } catch (error) {
-      console.error(error);
-      message.textContent = `❌ 送出失敗：${error.message || "請稍後再試"}`;
-      // 若資料寫入失敗，已上傳照片可能成為未使用檔案；不自動刪除，避免誤刪。
+      console.error("佛堂投稿錯誤：", error);
+      message.textContent = `❌ 投稿未完成：${error.message || "請稍後再試"}`;
+      if (uploadedPath) {
+        message.textContent += "\n提醒：照片可能已上傳到 Storage，但資料庫尚未完成寫入；請到 fotang-photos 確認該檔案。";
+      }
     } finally {
       submitButton.disabled = false;
     }
