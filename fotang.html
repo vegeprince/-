@@ -182,7 +182,7 @@
     }
 
     if (!data || data.length === 0) {
-      gallery.innerHTML = '<div class="empty">目前還沒有已核准的佛堂分享，歡迎成為第一位分享者。</div>';
+      gallery.innerHTML = '<div class="empty">目前還沒有佛堂分享，歡迎成為第一位分享者。</div>';
       return;
     }
 
@@ -269,7 +269,7 @@
           offering: deity,
           style: style,
           photo_url: photoUrl,
-          is_approved: false
+          is_approved: true
         });
 
       if (insertError) {
@@ -277,7 +277,7 @@
       }
 
       // 只有照片上傳及資料庫寫入都成功，才顯示成功。
-      message.textContent = "🎉 分享成功！照片與資料都已儲存，請等待管理員審核。";
+      message.textContent = "🎉 分享成功！照片與資料已儲存，並已直接公開發布！";
       form.reset();
       preview.style.display = "none";
       previewImage.removeAttribute("src");
