@@ -95,7 +95,7 @@
     <section class="gallery-wrap">
       <div class="gallery-title">
         <h2>🪷 佛堂分享</h2>
-        <p>以下內容僅顯示管理員審核通過的分享</p>
+        <p>所有佛堂投稿即時公開分享</p>
       </div>
       <div class="gallery" id="gallery"><div class="empty">正在載入佛堂分享……</div></div>
     </section>
@@ -160,20 +160,19 @@
     })[ch]);
   }
 
-  async function loadApprovedTemples() {
+  async function loadTemples() {
     if (!client) {
       gallery.innerHTML = '<div class="empty">Supabase 初始化失敗，請檢查網路或專案設定。</div>';
       return;
     }
 
-    // 依照 Supabase fotang_submissions 實際欄位名稱：
-    // id、姓名、提供、風格、照片連結、已批准、創建於
+    // 使用 Supabase 實際資料表的中文欄位。
+    // 不再依「已批准」篩選，所有既有及新投稿都直接顯示。
     const { data, error } = await client
       .from(TABLE_NAME)
-      .select("id,name,offering,style,photo_url")
-      .eq("is_approved", true)
-      .order("created_at", { ascending: false })
-      .limit(60);
+      .select("id,姓名,提供,風格,照片連結,已批准,創建於")
+      .order("創建於", { ascending: false })
+      .limit(100);
 
     if (error) {
       console.error("讀取佛堂分享失敗：", error);
@@ -188,11 +187,11 @@
 
     gallery.innerHTML = data.map(item => `
       <article class="item">
-        <img src="${escapeHtml(item.photo_url)}" alt="${escapeHtml(item.name)} 的佛堂照片" loading="lazy">
+        <img src="${escapeHtml(item["照片連結"])}" alt="${escapeHtml(item["姓名"])} 的佛堂照片" loading="lazy">
         <div class="info">
-          <h3>${escapeHtml(item.name)}</h3>
-          <p><strong>供奉仙佛：</strong>${escapeHtml(item.offering)}</p>
-          <p><strong>擺設風格：</strong>${escapeHtml(item.style)}</p>
+          <h3>${escapeHtml(item["姓名"])}</h3>
+          <p><strong>供奉仙佛：</strong>${escapeHtml(item["提供"])}</p>
+          <p><strong>擺設風格：</strong>${escapeHtml(item["風格"])}</p>
         </div>
       </article>
     `).join("");
@@ -265,19 +264,20 @@
       const { error: insertError } = await client
         .from(TABLE_NAME)
         .insert({
-          name: name,
-          offering: deity,
-          style: style,
-          photo_url: photoUrl,
-          is_approved: true
+          "姓名": name,
+          "提供": deity,
+          "風格": style,
+          "照片連結": photoUrl,
+          "已批准": true
         });
 
       if (insertError) {
-        throw new Error(`照片已上傳，但資料庫寫入失敗（${TABLE_NAME}）：${insertError.message}。請確認欄位名稱為 name、offering、style、photo_url、is_approved、created_at。`);
+        throw new Error(`照片已上傳，但資料庫寫入失敗（${TABLE_NAME}）：${insertError.message}。請確認資料表欄位為「姓名、提供、風格、照片連結、已批准、創建於」。`);
       }
 
       // 只有照片上傳及資料庫寫入都成功，才顯示成功。
-      message.textContent = "🎉 分享成功！照片與資料已儲存，並已直接公開發布！";
+      message.textContent = "🎉 分享成功！照片與資料已儲存，並已直接公開發布，無須等待審核！";
+      await loadTemples();
       form.reset();
       preview.style.display = "none";
       previewImage.removeAttribute("src");
@@ -296,7 +296,8 @@
     }
   });
 
-  loadApprovedTemples();
+  loadTemples();
 </script>
 </body>
 </html>
+
