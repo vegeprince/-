@@ -296,7 +296,19 @@
     }
   });
 
+  // 初次載入後，透過 Supabase Realtime 與定時刷新同步新投稿。
   loadTemples();
+  setInterval(loadTemples, 30000);
+  if (client) {
+    client
+      .channel("fotang-public-gallery-sync")
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: TABLE_NAME
+      }, () => loadTemples())
+      .subscribe();
+  }
 </script>
 </body>
 </html>
